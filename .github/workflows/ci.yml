@@ -8,5 +8,4 @@ jobs:
       - name: Run tests
         run: |
           chmod +x simple-interest.sh
-          ./simple-interest.sh -p 1000 -r 5 -t 2
-          echo "✓ All tests passed"
+          ./simple-interest.sh -p 1000 -r 5 -t 2 && echo "✓ All tests passed"
