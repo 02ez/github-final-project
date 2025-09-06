@@ -1,0 +1,61 @@
+# Docker ignore file for Simple Interest Calculator
+# Excludes unnecessary files from Docker build context
+
+# Git
+.git/
+.gitignore
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Development files
+.devcontainer/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# IDE files
+.idea/
+*.iml
+
+# Pre-commit
+.pre-commit-config.yaml
+
+# CI/CD (not needed in container)
+.github/workflows/
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE/
+
+# Documentation build artifacts
+docs/_build/
+docs/.doctrees/
+
+# Testing artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Local configuration
+.env
+.env.local
+local.config
+
+# Backup files
+*.bak
+*.backup

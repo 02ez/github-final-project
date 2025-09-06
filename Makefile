@@ -268,18 +268,42 @@ security-scan: ## Run basic security checks
 	@ls -la $(SCRIPT_NAME)
 	@echo -e "$(GREEN)Security scan completed$(NC)"
 
-##@ Release
+##@ Docker
 
-.PHONY: release-check
-release-check: validate benchmark ## Pre-release validation
-	@echo -e "$(BLUE)Running pre-release checks...$(NC)"
-	@echo -e "$(YELLOW)Verifying version consistency...$(NC)"
-	@grep -q "$(VERSION)" README.md || echo -e "$(YELLOW)Warning: Version not found in README.md$(NC)"
-	@echo -e "$(GREEN)Release check completed$(NC)"
+.PHONY: docker-build
+docker-build: ## Build Docker image
+	@echo -e "$(BLUE)Building Docker image...$(NC)"
+	@docker build -t $(PROJECT_NAME):$(VERSION) .
+	@docker build -t $(PROJECT_NAME):latest .
+	@echo -e "$(GREEN)Docker image built successfully$(NC)"
 
-.PHONY: all
-all: clean install ci package docs ## Run complete build pipeline
-	@echo -e "$(GREEN)Complete build pipeline finished successfully!$(NC)"
+.PHONY: docker-build-dev
+docker-build-dev: ## Build development Docker image
+	@echo -e "$(BLUE)Building development Docker image...$(NC)"
+	@docker build --target development -t $(PROJECT_NAME):dev .
+	@echo -e "$(GREEN)Development Docker image built successfully$(NC)"
+
+.PHONY: docker-test
+docker-test: ## Test Docker image functionality
+	@echo -e "$(BLUE)Testing Docker image...$(NC)"
+	@docker run --rm $(PROJECT_NAME):latest -p 1000 -r 5 -t 2
+	@echo -e "$(GREEN)Docker image test completed$(NC)"
+
+.PHONY: docker-run
+docker-run: ## Run Docker container interactively
+	@echo -e "$(BLUE)Running Docker container...$(NC)"
+	@docker run --rm -it $(PROJECT_NAME):latest
+
+.PHONY: docker-dev
+docker-dev: ## Run development Docker container
+	@echo -e "$(BLUE)Starting development environment...$(NC)"
+	@docker run --rm -it -v "$(PWD)":/workspace $(PROJECT_NAME):dev
+
+.PHONY: docker-clean
+docker-clean: ## Remove Docker images
+	@echo -e "$(BLUE)Cleaning Docker images...$(NC)"
+	@docker rmi $(PROJECT_NAME):$(VERSION) $(PROJECT_NAME):latest $(PROJECT_NAME):dev 2>/dev/null || true
+	@echo -e "$(GREEN)Docker cleanup completed$(NC)"
 
 # Development shortcuts
 .PHONY: dev
