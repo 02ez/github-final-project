@@ -1,0 +1,21 @@
+{
+  "name": "Simple Interest Calculator",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true
+    }
+  },
+  "postCreateCommand": "apt-get update && apt-get install -y bats shellcheck bc make",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}
