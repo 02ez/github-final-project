@@ -1,0 +1,184 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*', 'hotfix/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+  schedule:
+    # Run daily security scans at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  SCRIPT_NAME: simple-interest.sh
+  TEST_COVERAGE_THRESHOLD: 90
+
+jobs:
+  # Code Quality and Security Checks
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc shellcheck bats
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck -x "$SCRIPT_NAME" || exit 1
+          echo "✅ ShellCheck passed"
+
+      - name: Check script syntax
+        run: |
+          bash -n "$SCRIPT_NAME" || exit 1
+          echo "✅ Bash syntax check passed"
+
+      - name: Security scan
+        run: |
+          # Check for potential security issues
+          make security-scan
+          echo "✅ Security scan completed"
+
+  # Multi-OS Testing
+  test-matrix:
+    name: Test Suite
+    needs: code-quality
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup dependencies (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bats
+
+      - name: Setup dependencies (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install bc bats-core
+
+      - name: Make script executable
+        run: chmod +x "$SCRIPT_NAME"
+
+      - name: Run basic functionality test
+        run: |
+          result=$(./simple-interest.sh -p 1000 -r 5 -t 2)
+          echo "Result: $result"
+          if [[ "$result" == *"Simple interest: 100.00"* ]] && [[ "$result" == *"Total amount: 1100.00"* ]]; then
+            echo "✅ Basic functionality test passed"
+          else
+            echo "❌ Basic functionality test failed"
+            exit 1
+          fi
+
+      - name: Run comprehensive test suite
+        run: |
+          if [ -f "tests/simple-interest.bats" ]; then
+            bats tests/simple-interest.bats
+            echo "✅ All tests passed on ${{ matrix.os }}"
+          else
+            echo "❌ Test file not found"
+            exit 1
+          fi
+
+  # Advanced Feature Testing
+  feature-tests:
+    name: Advanced Feature Tests
+    needs: code-quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bats jq
+
+      - name: Test output formats
+        run: |
+          chmod +x "$SCRIPT_NAME"
+          
+          # Test JSON output
+          json_result=$(./simple-interest.sh -p 1000 -r 5 -t 2 -f json)
+          echo "$json_result" | jq . >/dev/null || (echo "❌ Invalid JSON output" && exit 1)
+          interest=$(echo "$json_result" | jq -r '.results.interest')
+          if [ "$interest" = "100.00" ]; then
+            echo "✅ JSON output test passed"
+          else
+            echo "❌ JSON output test failed: expected 100.00, got $interest"
+            exit 1
+          fi
+
+      - name: Test compound interest
+        run: |
+          result=$(./simple-interest.sh -p 1000 -r 5 -t 2 -c)
+          if [[ "$result" == *"Compound Interest: \$102.50"* ]]; then
+            echo "✅ Compound interest test passed"
+          else
+            echo "❌ Compound interest test failed"
+            exit 1
+          fi
+
+  # Build and Package
+  build:
+    name: Build & Package
+    needs: [test-matrix, feature-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bats
+
+      - name: Run build process
+        run: |
+          make build
+          echo "✅ Build completed successfully"
+
+      - name: Create distribution package
+        run: |
+          make package
+          echo "✅ Package created successfully"
+          ls -la dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution-package
+          path: dist/
+          retention-days: 30
+
+# Summary job that requires all other jobs to pass
+build-status:
+  name: Build Status
+  runs-on: ubuntu-latest
+  needs: [code-quality, test-matrix, feature-tests, build]
+  if: always()
+  steps:
+    - name: Check build status
+      run: |
+        if [[ "${{ needs.code-quality.result }}" == "success" && \
+              "${{ needs.test-matrix.result }}" == "success" && \
+              "${{ needs.feature-tests.result }}" == "success" && \
+              "${{ needs.build.result }}" == "success" ]]; then
+          echo "✅ All checks passed! Build is successful."
+        else
+          echo "❌ Some checks failed. Build is not successful."
+          exit 1
+        fi
