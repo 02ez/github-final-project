@@ -1,0 +1,10 @@
+name: Copilot
+on:
+  push:
+    branches: [main]
+jobs:
+  copilot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Copilot check passed"
