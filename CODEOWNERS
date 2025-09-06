@@ -1,0 +1,8 @@
+# Global owners for all files
+* @02ez
+
+# Specific ownership for key files
+simple-interest.sh @02ez
+test/ @02ez
+.github/ @02ez
+Makefile @02ez
