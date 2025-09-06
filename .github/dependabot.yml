@@ -1,0 +1,62 @@
+# Dependabot configuration for Simple Interest Calculator
+# This file configures automatic dependency updates
+
+version: 2
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "02ez"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps):"
+      prefix-development: "chore(deps-dev):"
+      include: "scope"
+
+  # For future Docker dependencies (if we add Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "02ez"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for base images (manual review required)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # For future npm dependencies (if we add package.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "02ez"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore(deps):"
+      prefix-development: "chore(deps-dev):"
+      include: "scope"
+    versioning-strategy: "increase"

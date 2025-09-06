@@ -1,0 +1,102 @@
+{
+  "name": "Simple Interest Calculator Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "davidanson.vscode-markdownlint",
+        "ms-vsliveshare.vsliveshare",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-vscode.makefile-tools",
+        "rogalmic.bash-debug",
+        "mads-hartmann.bash-ide-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "shellcheck.enable": true,
+        "shellcheck.executablePath": "shellcheck",
+        "shellformat.effectLanguages": ["shellscript", "dockerfile", "dotenv"],
+        "files.associations": {
+          "*.bats": "shellscript",
+          "simple-interest.sh": "shellscript",
+          "Makefile": "makefile"
+        },
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll": true
+        },
+        "workbench.colorTheme": "Default Dark+",
+        "git.enableSmartCommit": true,
+        "git.confirmSync": false,
+        "markdown.preview.fontSize": 14,
+        "markdown.preview.lineHeight": 1.6
+      }
+    }
+  },
+
+  "containerEnv": {
+    "SCRIPT_NAME": "simple-interest.sh",
+    "PROJECT_NAME": "simple-interest-calculator",
+    "DEVELOPMENT_MODE": "true"
+  },
+
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/usr/local/bin"
+  },
+
+  "onCreateCommand": [
+    "sudo apt-get update",
+    "sudo apt-get install -y bc shellcheck bats jq curl wget",
+    "echo 'Development tools installed'"
+  ],
+
+  "postCreateCommand": [
+    "chmod +x simple-interest.sh",
+    "make install || echo 'Some dependencies may not be available'",
+    "echo 'Development environment ready!'",
+    "echo 'Available commands:'",
+    "echo '  make help      - Show all available commands'",
+    "echo '  make test      - Run test suite'",
+    "echo '  make dev       - Quick development cycle'",
+    "echo '  make benchmark - Performance testing'",
+    "./simple-interest.sh --version"
+  ],
+
+  "postStartCommand": [
+    "echo '🚀 Simple Interest Calculator Dev Environment Started'"
+  ],
+
+  "remoteUser": "vscode",
+  
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "forwardPorts": [],
+
+  "shutdownAction": "stopContainer"
+}

@@ -1,0 +1,126 @@
+# Pre-commit configuration for Simple Interest Calculator
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: [-x, -e, SC1091]
+        files: '\.sh$'
+
+  # Shell script formatting
+  - repo: https://github.com/mvdan/sh
+    rev: v3.7.0
+    hooks:
+      - id: shfmt
+        args: [-w, -i, '4', -ci]
+        files: '\.sh$'
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        args: [--config, .markdownlint.json]
+        files: '\.md$'
+
+  # Commit message linting
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [optional-scope]
+
+  # Security checks
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Local hooks for project-specific checks
+  - repo: local
+    hooks:
+      # Run our test suite
+      - id: run-tests
+        name: Run test suite
+        entry: make test
+        language: system
+        files: '(\.sh$|\.bats$|Makefile)'
+        pass_filenames: false
+
+      # Check script functionality
+      - id: check-script-execution
+        name: Check script execution
+        entry: bash -c './simple-interest.sh -p 1000 -r 5 -t 2 | grep -q "Simple interest: 100.00"'
+        language: system
+        files: 'simple-interest\.sh$'
+        pass_filenames: false
+
+      # Validate JSON output
+      - id: validate-json-output
+        name: Validate JSON output format
+        entry: bash -c './simple-interest.sh -p 1000 -r 5 -t 2 -f json | jq . >/dev/null'
+        language: system
+        files: 'simple-interest\.sh$'
+        pass_filenames: false
+
+      # Check for TODO/FIXME comments
+      - id: check-todos
+        name: Check for TODO/FIXME comments
+        entry: bash -c 'if grep -n "TODO\|FIXME\|XXX" simple-interest.sh; then echo "Please resolve TODO/FIXME comments before committing"; exit 1; fi'
+        language: system
+        files: 'simple-interest\.sh$'
+        pass_filenames: false
+
+      # Verify version consistency
+      - id: version-consistency
+        name: Check version consistency
+        entry: bash -c 'script_version=$(grep "SCRIPT_VERSION=" simple-interest.sh | cut -d"\"" -f2); if ! grep -q "$script_version" CHANGELOG.md; then echo "Version $script_version not found in CHANGELOG.md"; exit 1; fi'
+        language: system
+        files: '(simple-interest\.sh|CHANGELOG\.md)$'
+        pass_filenames: false
+
+      # Documentation consistency check
+      - id: docs-consistency
+        name: Check documentation consistency
+        entry: bash -c 'if [ docs/API.md -ot simple-interest.sh ]; then echo "API documentation may be outdated"; exit 1; fi'
+        language: system
+        files: '(simple-interest\.sh|docs/API\.md)$'
+        pass_filenames: false
+
+      # Performance regression check
+      - id: performance-check
+        name: Basic performance regression check
+        entry: bash -c 'start=$(date +%s%N); for i in {1..10}; do ./simple-interest.sh -p 1000 -r 5 -t 2 >/dev/null; done; end=$(date +%s%N); duration=$(((end-start)/1000000)); if [ $duration -gt 2000 ]; then echo "Performance regression detected: ${duration}ms for 10 calculations"; exit 1; fi'
+        language: system
+        files: 'simple-interest\.sh$'
+        pass_filenames: false
+
+# Global pre-commit configuration
+ci:
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
