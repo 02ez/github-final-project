@@ -1,8 +1,19 @@
-# Global owners for all files
-* @02ez
+# Global code owners - require 2 approvals for all changes
+* @02ez @security-team
 
-# Specific ownership for key files
-simple-interest.sh @02ez
-test/ @02ez
-.github/ @02ez
-Makefile @02ez
+# Security-sensitive files require security team approval
+SECURITY.md @security-team
+.github/workflows/ @security-team @devops-team
+Dockerfile @security-team @devops-team
+
+# Core application logic requires senior review
+simple-interest.sh @senior-developers @02ez
+test/ @senior-developers @02ez
+
+# Documentation requires technical writing review
+*.md @technical-writers @02ez
+
+# Dependencies and build configuration
+Makefile @devops-team @02ez
+.pre-commit-config.yaml @devops-team
+.github/dependabot.yml @security-team @devops-team
