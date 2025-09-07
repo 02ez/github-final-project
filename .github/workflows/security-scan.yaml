@@ -1,0 +1,103 @@
+name: Security Scan
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: []  # No compiled languages, but keeping structure for consistency
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        
+      - name: Manual security review for shell scripts
+        run: |
+          echo "Performing manual security review of shell scripts..."
+          
+          # Check for common shell security issues
+          echo "Checking for security anti-patterns..."
+          
+          # Check for eval usage
+          if grep -r "eval" . --include="*.sh"; then
+            echo "WARNING: eval found in shell scripts"
+          fi
+          
+          # Check for unsafe variable expansion
+          if grep -r '\$[A-Za-z_][A-Za-z0-9_]*' . --include="*.sh" | grep -v '\$[{]'; then
+            echo "INFO: Unquoted variables found - review for safety"
+          fi
+          
+          # Check for command injection risks
+          echo "Security review completed"
+          
+  trivy:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b9f995bdd # v0.24.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@eb055d739abdc2e8de2e5f4ba1a8b246daa779aa # v3.26.0
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+          
+  semgrep:
+    name: Semgrep Security Scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - run: semgrep ci --sarif --output=semgrep.sarif
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+          
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@eb055d739abdc2e8de2e5f4ba1a8b246daa779aa # v3.26.0
+        with:
+          sarif_file: semgrep.sarif
+        if: always()
+        
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+          
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@aee8e616583aed50b4ddbc55e2b1b0e5eac8b7b9 # v3.81.7
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified

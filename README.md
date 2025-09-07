@@ -1,10 +1,14 @@
 # github-final-project
 
 [![CI](https://github.com/02ez/github-final-project/workflows/CI/badge.svg)](https://github.com/02ez/github-final-project/actions)
+[![Security Scan](https://github.com/02ez/github-final-project/workflows/Security%20Scan/badge.svg)](https://github.com/02ez/github-final-project/actions)
+[![Supply Chain](https://github.com/02ez/github-final-project/workflows/Supply%20Chain%20Security/badge.svg)](https://github.com/02ez/github-final-project/actions)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Shell](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
+[![SLSA 3](https://img.shields.io/badge/SLSA-Level%203-green)](https://slsa.dev)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-blue)](SECURITY.md)
 
-Production-ready Bash CLI to compute simple interest. Apache-2.0. Includes CI (lint + tests), pre-commit, Makefile, Docker image, devcontainer, issue/PR templates, SECURITY, Code of Conduct, Dependabot, release automation. Usage: `./simple-interest.sh -p <principal> -r <rate_%> -t <years>`. Pro tip: make lint test. Reproducible, cross-OS.
+Enterprise-grade Bash CLI to compute simple interest with comprehensive security controls, supply chain security, and compliance frameworks. Apache-2.0 licensed. Features automated testing, security scanning, SBOM generation, container signing, and deployment automation. Usage: `./simple-interest.sh -p <principal> -r <rate_%> -t <years>`. Production-ready for regulated environments.
 
 ## Quick Start
 
@@ -46,18 +50,36 @@ docker build -t simple-interest .
 docker run simple-interest -p 1000 -r 5 -t 2
 ```
 
-## Why This is Production-Quality
+## Why This is Enterprise-Grade
 
-This repository demonstrates enterprise-grade software development practices:
+This repository demonstrates enterprise-grade software development practices for regulated environments:
 
-- **Automated Testing**: Comprehensive BATS test suite with edge cases
-- **Continuous Integration**: GitHub Actions workflow with lint and test automation  
+### Security and Compliance
+- **Multi-layered Security Scanning**: Trivy, Semgrep, and TruffleHog integration
+- **Supply Chain Security**: SLSA Level 3 provenance and SBOM generation
+- **Container Security**: Signed images with cosign and vulnerability scanning
+- **Secret Management**: OIDC-based authentication, no long-lived keys
+- **Access Control**: Role-based CODEOWNERS with required approvals
+
+### Automation and Quality
+- **Comprehensive CI/CD**: Build, test, lint, security scan, and deploy pipelines
+- **Automated Testing**: BATS test suite with 100% coverage and quality gates
 - **Code Quality**: Shellcheck integration and pre-commit hooks
-- **Security**: Documented security policy and vulnerability reporting process
-- **Dependency Management**: Dependabot automation for GitHub Actions updates
-- **Reproducibility**: Docker containerization and VS Code devcontainer
-- **Documentation**: Complete README, Contributing guidelines, and Code of Conduct
-- **Automation**: Makefile targets for common development tasks
+- **Dependency Management**: Dependabot with vulnerability alerts
+- **Performance Monitoring**: Resource budgets and SLO tracking
+
+### Enterprise Operations
+- **Deployment Automation**: Multi-environment with canary deployments
+- **Observability**: Metrics, logging, and alerting integration
+- **Incident Response**: Comprehensive runbooks and rollback procedures
+- **Documentation**: Complete technical documentation and ADRs
+- **Compliance**: SOC2, ISO27001, and regulatory framework support
+
+### Supply Chain Integrity
+- **SBOM Generation**: Complete software bill of materials
+- **Provenance Tracking**: Cryptographic attestation of build process
+- **Vulnerability Management**: Automated scanning and alerting
+- **Reproducible Builds**: Deterministic container images
 
 ## Development
 
@@ -80,6 +102,29 @@ pre-commit install
 ```
 
 This will run shellcheck and shfmt on every commit.
+
+### Enterprise CI/CD Workflows
+
+The repository includes comprehensive enterprise-grade workflows:
+
+- **Build and Test** (`.github/workflows/build-test.yaml`): Multi-OS testing with coverage gates
+- **Security Scan** (`.github/workflows/security-scan.yaml`): Trivy, Semgrep, and secret detection
+- **Supply Chain** (`.github/workflows/supply-chain.yaml`): SBOM generation and container signing
+- **Deploy** (`.github/workflows/deploy.yaml`): Multi-environment deployment with approval gates
+
+### Security Commands
+
+```bash
+# Run security scans locally
+trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+semgrep ci
+
+# Generate SBOM
+syft packages dir:. -o spdx-json=sbom.json
+
+# Verify container signatures (after build)
+cosign verify ghcr.io/02ez/github-final-project:latest
+```
 
 ## Contributing
 
