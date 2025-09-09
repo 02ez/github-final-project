@@ -1,4 +1,4 @@
-.PHONY: test lint install clean help
+.PHONY: test lint install clean cleanup help
 
 # Default target
 help:
@@ -7,6 +7,7 @@ help:
 	@echo "  lint     - Run shellcheck on scripts"
 	@echo "  install  - Install dependencies (bats, shellcheck)"
 	@echo "  clean    - Clean temporary files"
+	@echo "  cleanup  - Run repository cleanup (close PRs, delete runs, disable workflows)"
 	@echo "  help     - Show this help message"
 
 # Run tests using BATS
@@ -23,7 +24,7 @@ test:
 lint:
 	@echo "Running shellcheck..."
 	@if command -v shellcheck >/dev/null 2>&1; then \
-		shellcheck simple-interest.sh; \
+		shellcheck simple-interest.sh cleanup.sh; \
 		echo "Linting completed."; \
 	else \
 		echo "shellcheck not found. Run 'make install' to install dependencies."; \
@@ -46,3 +47,8 @@ clean:
 	@echo "Cleaning temporary files..."
 	@find . -name "*.tmp" -delete 2>/dev/null || true
 	@echo "Clean completed."
+
+# Run repository cleanup
+cleanup:
+	@echo "Running repository cleanup..."
+	@./cleanup.sh
